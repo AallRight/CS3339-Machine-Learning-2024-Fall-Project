@@ -20,9 +20,12 @@ class CNN(nn.Module):
         
         # 池化层，2x2
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.pool2 = nn.MaxPool2d(kernel_size=3, stride=3, padding=0)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2, padding=1)
         
         # Dropout层
         self.dropout = nn.Dropout(p=0.3)  # 50% dropout
+        self.dropout2 = nn.Dropout(p=0.5)  # 50% dropout
 
         # 全连接层，输入维度要根据上面卷积池化后的输出维度来计算
         # 假设输入图片大小为100x100，经过两次2x2池化后，尺寸会变成25x25
@@ -31,9 +34,9 @@ class CNN(nn.Module):
         
     def forward(self, x):
         # 第一层卷积 -> 激活函数 -> 池化
-        x = self.pool(torch.relu(self.conv1(x)))
+        x = self.pool(torch.gelu(self.conv1(x)))
         # 第二层卷积 -> 激活函数 -> 池化
-        x = self.pool(torch.relu(self.conv2(x)))
+        x = self.pool(torch.gelu(self.conv2(x)))
         # 展开成一维向量
         x = x.view(-1, 64 * 25 * 25)
         # 全连接层 -> 激活函数 -> Dropout
@@ -104,6 +107,7 @@ def train(model, train_loader, validation_loader, criterion, optimizer, epochs=1
               f'Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.2f}%, '
               f'Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%')
 
+
         # 保存模型
         torch.save(model.state_dict(), f'model/method1/cnn_model_{epoch+1}_{timestamp}.pth')
 
@@ -139,7 +143,7 @@ if __name__ == '__main__':
     # 创建模型、损失函数和优化器
     model = CNN().cuda()  # 将模型放到GPU上（如果有）
     criterion = nn.CrossEntropyLoss()  # 分类问题用交叉熵损失
-    optimizer = optim.Adam(model.parameters(), lr=0.0003)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     # 训练模型
     train(model, train_loader, val_loader, criterion, optimizer, epochs=10)
